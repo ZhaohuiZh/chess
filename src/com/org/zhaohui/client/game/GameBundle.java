@@ -39,5 +39,8 @@ public interface GameBundle extends ClientBundle {
 
 	@Source("knightW.png")
 	ImageResource whiteKnight();
+	
+	@Source("empty.png")
+	ImageResource empty();
 
 }

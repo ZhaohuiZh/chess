@@ -28,215 +28,231 @@ import com.org.zhaohui.shared.basics.Position;
 import com.org.zhaohui.shared.basics.State;
 
 public class ChessPresenter {
-	public interface View {
-		// Renders the piece at this position. If piece is null then the
-		// position is empty.
-		void setPiece(int row, int col, Piece piece);
+  public interface View {
+    // Renders the piece at this position. If piece is null then the
+    // position is empty.
+    void setPiece(int row, int col, Piece piece);
 
-		// Turns the highlighting on or off at this cell. Cells that can be
-		// clicked should be highlighted
-		void setHighlighted(int row, int col, boolean highlighted);
+    // Turns the highlighting on or off at this cell. Cells that can be
+    // clicked should be highlighted
+    void setHighlighted(int row, int col, boolean highlighted);
 
-		// Indicate whose turn it is.
-		void setWhoseTurn(Color color);
+    // Indicate whose turn it is.
+    void setWhoseTurn(Color color);
 
-		// Indicate whether the game is in progress or over.
-		void setGameResult(GameResult gameResult);
+    // Indicate whether the game is in progress or over.
+    void setGameResult(GameResult gameResult);
 
-		void setPromotionPiece();
+    void setPromotionPiece();
 
-		void setPromotionGrid(boolean flag, Color color);
+    void setPromotionGrid(boolean flag, Color color);
 
-		HasClickHandlers getClickCellOnChessBoard(int row, int col);
+    HasClickHandlers getClickCellOnChessBoard(int row, int col);
 
-		// HasDragStartHandlers getDraggedCellOnChessBoard(int row, int col);
+    // HasDragStartHandlers getDraggedCellOnChessBoard(int row, int col);
 
-		// HasDropHandlers getDroppedCellOnChessBoard(int row, int col);
+    // HasDropHandlers getDroppedCellOnChessBoard(int row, int col);
 
-		// HasDragOverHandlers getDraggedOverCellOnChessBoard(int row, int col);
+    // HasDragOverHandlers getDraggedOverCellOnChessBoard(int row, int col);
 
-		// HasDragLeaveHandlers getDraggedLeaveCellOnChessBoard(int row, int
-		// col);
+    // HasDragLeaveHandlers getDraggedLeaveCellOnChessBoard(int row, int col);
 
-		HasClickHandlers getClickPromotionKindWhite(int row);
+    HasClickHandlers getClickPromotionKindWhite(int row);
 
-		HasClickHandlers getClickPromotionKindBlack(int row);
+    HasClickHandlers getClickPromotionKindBlack(int row);
 
-		HasClickHandlers getClickStartGame();
+    HasClickHandlers getClickStartGame();
 
-		HasClickHandlers getClickSaveGame();
+    HasClickHandlers getClickSaveGame();
 
-		HasClickHandlers getClickLoadGame();
+    HasClickHandlers getClickLoadGame();
 
-		void addHistoryItem(String str);
+    void addHistoryItem(String str);
 
-		String getHistoryItem();
+    String getHistoryItem();
 
-		void addHistoryHandler(ValueChangeHandler<String> handler);
+    void addHistoryHandler(ValueChangeHandler<String> handler);
 
-		void animation(Position p);
+    void animation(Position p);
 
-	}
+    // Indicate opponent
+    void setOpponent(String opponentName);
 
-	private View view;
-	private State state;
-	private Storage storage = Storage.getLocalStorageIfSupported();
-	private String historyToken = null;
-	private final StateSerializer stateSerializer = StateSerializer
-			.getInstance();
+    // Indicate
+    void setPlayerColor(Color color);
 
-	public void initView(ChessView graphics) {
-		this.setView(graphics);
-		state = new State();
-		this.setState(state);
-		view.setPromotionPiece();
-		bindHandler();
-	}
+    void setPlayerInfo(String email, String nickName);
 
-	public void setView(View view) {
-		this.view = view;
-	}
+    String getOpponentEmail();
 
-	public void setState(State state) {
-		view.setWhoseTurn(state.getTurn());
-		if (state.getGameResult() != null) {
-			Audio gameResultAudio = creatGameResultAudio();
-			gameResultAudio.play();
-		}
-		view.setGameResult(state.getGameResult());
-		for (int row = 0; row < State.ROWS; row++) {
-			for (int col = 0; col < State.COLS; col++) {
-				view.setPiece(row, col, state.getPiece(row, col));
-			}
-		}
-		view.addHistoryItem(stateSerializer.serializeState(state));
+    HasClickHandlers getClickMakeMatch();
 
-	}
+    HasClickHandlers getClickFindOpponent();
 
-	public void bindHandler() {
-		for (int row = 0; row < State.ROWS; row++) {
-			for (int col = 0; col < State.COLS; col++) {
-				final int r = row;
-				final int c = col;
-				view.getClickCellOnChessBoard(row, col).addClickHandler(
-						new ClickHandler() {
-							public void onClick(ClickEvent event) {
-								clickedOn(r, c);
-							}
+  }
 
-						});
-			}
-		}
+  private View view;
+  private State state;
+  private Storage storage = Storage.getLocalStorageIfSupported();
+  private String historyToken = null;
+  private final StateSerializer stateSerializer = StateSerializer.getInstance();
 
-		for (int row = 0; row < 4; row++) {
-			final int n = row;
-			view.getClickPromotionKindBlack(row).addClickHandler(
-					new ClickHandler() {
+  public void initView(ChessView graphics) {
+    this.setView(graphics);
+    state = new State();
+    this.setState(state);
+    view.setPromotionPiece();
+    bindHandler();
+  }
 
-						@Override
-						public void onClick(ClickEvent event) {
-							getPromotionType(n, Color.BLACK);
-						}
-					});
-			view.getClickPromotionKindWhite(row).addClickHandler(
-					new ClickHandler() {
+  public void setView(View view) {
+    this.view = view;
+  }
 
-						@Override
-						public void onClick(ClickEvent event) {
-							getPromotionType(n, Color.WHITE);
-						}
-					});
-		}
+  public void setState(State state) {
+    view.setWhoseTurn(state.getTurn());
+    if (state.getGameResult() != null) {
+      Audio gameResultAudio = creatGameResultAudio();
+      gameResultAudio.play();
+    }
+    view.setGameResult(state.getGameResult());
+    for (int row = 0; row < State.ROWS; row++) {
+      for (int col = 0; col < State.COLS; col++) {
+        view.setPiece(row, col, state.getPiece(row, col));
+      }
+    }
+    view.addHistoryItem(stateSerializer.serializeState(state));
 
-		view.getClickStartGame().addClickHandler(new ClickHandler() {
+  }
 
-			@Override
-			public void onClick(ClickEvent event) {
-				state = new State();
-				setState(state);
-			}
+  public void bindHandler() {
+    for (int row = 0; row < State.ROWS; row++) {
+      for (int col = 0; col < State.COLS; col++) {
+        final int r = row;
+        final int c = col;
+        view.getClickCellOnChessBoard(row, col).addClickHandler(
+            new ClickHandler() {
+              public void onClick(ClickEvent event) {
+                clickedOn(r, c);
+              }
+            });
+      }
+    }
 
-		});
+    for (int row = 0; row < 4; row++) {
+      final int n = row;
+      view.getClickPromotionKindBlack(row).addClickHandler(new ClickHandler() {
 
-		view.addHistoryHandler(new ValueChangeHandler<String>() {
+        @Override
+        public void onClick(ClickEvent event) {
+         // getPromotionType(n, Color.BLACK);
+        }
+      });
+      view.getClickPromotionKindWhite(row).addClickHandler(new ClickHandler() {
 
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				historyToken = event.getValue();
-				String currentState = stateSerializer.serializeState(state);
-				if (!historyToken.equals(currentState)) {
-					State newState = stateSerializer
-							.unSrializeState(historyToken);
-					state = newState;
-					setState(state);
-				}
+        @Override
+        public void onClick(ClickEvent event) {
+          //getPromotionType(n, Color.WHITE);
+        }
+      });
+    }
 
-			}
+    view.getClickStartGame().addClickHandler(new ClickHandler() {
 
-		});
+      @Override
+      public void onClick(ClickEvent event) {
+        state = new State();
+        setState(state);
+      }
 
-		view.getClickSaveGame().addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				if (storage != null) {
-					storage.setItem("storedState", historyToken);
-				} else {
-					Window.alert("The save & load function is not supported. Try upgrading to a newer browser!");
-				}
-			}
+    });
 
-		});
+    view.addHistoryHandler(new ValueChangeHandler<String>() {
 
-		view.getClickLoadGame().addClickHandler(new ClickHandler() {
+      @Override
+      public void onValueChange(ValueChangeEvent<String> event) {
+        historyToken = event.getValue();
+        String currentState = stateSerializer.serializeState(state);
+        if (!historyToken.equals(currentState)) {
+          State newState = stateSerializer.unSrializeState(historyToken);
+          state = newState;
+          setState(state);
+        }
 
-			@Override
-			public void onClick(ClickEvent event) {
-				if (storage != null) {
-					String value = storage.getItem("storedState");
-					State newState = stateSerializer.unSrializeState(value);
-					state = newState;
-					setState(state);
-				} else {
-					Window.alert("The save & load function is not supported. Try upgrading to a newer browser!");
-				}
+      }
 
-			}
-		});
+    });
 
-	}
+    view.getClickSaveGame().addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        if (storage != null) {
+          storage.setItem("storedState", historyToken);
+        } else {
+          Window
+              .alert("The save & load function is not supported. Try upgrading to a newer browser!");
+        }
+      }
 
-	public Audio creatMoveAudio() {
-		Audio audio = Audio.createIfSupported();
-		if (audio == null) {
-			Window.alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
-		}
-		audio.addSource("sound_zhaohuizhang/move.ogg", AudioElement.TYPE_OGG);
-		audio.addSource("sound_zhaohuizhang/move.wav", AudioElement.TYPE_WAV);
-		audio.setControls(true);
-		return audio;
-	}
+    });
 
-	public Audio creatCaptureAudio() {
-		Audio audio = Audio.createIfSupported();
-		if (audio == null) {
-			Window.alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
-		}
-		audio.addSource("sound_zhaohuizhang/capture.ogg", AudioElement.TYPE_OGG);
-		audio.addSource("sound_zhaohuizhang/capture.wav", AudioElement.TYPE_WAV);
-		audio.setControls(true);
-		return audio;
-	}
+    view.getClickLoadGame().addClickHandler(new ClickHandler() {
 
-	public Audio creatGameResultAudio() {
-		Audio audio = Audio.createIfSupported();
-		if (audio == null) {
-			Window.alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
-		}
-		audio.addSource("sound_zhaohuizhang/gameresult.ogg",
-				AudioElement.TYPE_OGG);
-		audio.addSource("sound_zhaohuizhang/gameresult.wav",
-				AudioElement.TYPE_WAV);
-		audio.setControls(true);
-		return audio;
-	}
+      @Override
+      public void onClick(ClickEvent event) {
+        if (storage != null) {
+          String value = storage.getItem("storedState");
+          State newState = stateSerializer.unSrializeState(value);
+          state = newState;
+          setState(state);
+        } else {
+          Window
+              .alert("The save & load function is not supported. Try upgrading to a newer browser!");
+        }
+
+      }
+    });
+
+  }
+
+  public Audio creatMoveAudio() {
+    Audio audio = Audio.createIfSupported();
+    if (audio == null) {
+      Window
+          .alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
+    }
+    audio.addSource("sound_zhaohuizhang/move.ogg", AudioElement.TYPE_OGG);
+    audio.addSource("sound_zhaohuizhang/move.wav", AudioElement.TYPE_WAV);
+    audio.setControls(true);
+    return audio;
+  }
+
+  public Audio creatCaptureAudio() {
+    Audio audio = Audio.createIfSupported();
+    if (audio == null) {
+      Window
+          .alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
+    }
+    audio.addSource("sound_zhaohuizhang/capture.ogg", AudioElement.TYPE_OGG);
+    audio.addSource("sound_zhaohuizhang/capture.wav", AudioElement.TYPE_WAV);
+    audio.setControls(true);
+    return audio;
+  }
+
+  public Audio creatGameResultAudio() {
+    Audio audio = Audio.createIfSupported();
+    if (audio == null) {
+      Window
+          .alert("The sound of the chess is not supported. Try upgrading to a newer browser!");
+    }
+    audio.addSource("sound_zhaohuizhang/gameresult.ogg", AudioElement.TYPE_OGG);
+    audio.addSource("sound_zhaohuizhang/gameresult.wav", AudioElement.TYPE_WAV);
+    audio.setControls(true);
+    return audio;
+  }
+  
+  private void clickedOn(int row, int col){
+    
+  }
+  
 }
